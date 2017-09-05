@@ -18,7 +18,7 @@ std::wstring get_property
 )
 {
     DWORD  DataT;
-    LPTSTR buffer = NULL;
+    wchar_t* buffer = NULL;
     DWORD  buffersize = 0;
 
     //
@@ -50,7 +50,7 @@ std::wstring get_property
             }
             // Double the size to avoid problems on 
             // W2k MBCS systems per KB 888609. 
-            buffer = (LPTSTR)LocalAlloc(LPTR, buffersize * 2);
+            buffer = (wchar_t*)LocalAlloc(LPTR, buffersize * 2);
         }
         else
         {
@@ -136,9 +136,7 @@ int main()
         std::memset(&DriverInfoData, 0, sizeof(SP_DRVINFO_DATA));
         DriverInfoData.cbSize = sizeof(SP_DRVINFO_DATA);
 
-        SP_DEVINSTALL_PARAMS deviceInstallParams;
-        ZeroMemory(&deviceInstallParams, sizeof(deviceInstallParams));
-        deviceInstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
+
 
         //std::wcout << L"Friendly name :" << get_property(hDevInfo, DeviceInfoData, L"Friendly name :", SPDRP_FRIENDLYNAME) << std::endl;
         //std::wcout << L"MFG:" << get_property(hDevInfo, DeviceInfoData, L"MFG:", SPDRP_MFG) << std::endl;
@@ -195,6 +193,10 @@ int main()
 
         get_property(hDevInfo, DeviceInfoData, L"Class :", SPDRP_CLASS);
         get_property(hDevInfo, DeviceInfoData, L"Class GUID :", SPDRP_CLASSGUID);
+
+        SP_DEVINSTALL_PARAMS deviceInstallParams;
+        ZeroMemory(&deviceInstallParams, sizeof(deviceInstallParams));
+        deviceInstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
 
         if (SetupDiGetDeviceInstallParams(hDevInfo, &DeviceInfoData, &deviceInstallParams)) {
             //std::wstring dPath(deviceInstallParams.DriverPath);
