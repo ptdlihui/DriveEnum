@@ -18,7 +18,7 @@ namespace DriveEnum
         {
             Properties::const_iterator ci = m_properties.find(prop);
             if (ci != m_properties.cend())
-                return ci->second;
+                return ci->second.string;
 
             return std::wstring();
         }
@@ -29,7 +29,7 @@ namespace DriveEnum
             Properties::const_iterator ci = m_properties.find(prop);
             if (ci != m_properties.cend())
             {
-                std::wstring guidStr = ci->second;
+                std::wstring guidStr = ci->second.string;
                 GUID ret;
                 HRESULT hr = CLSIDFromString(guidStr.data(), &ret);
                 if (hr == S_OK)
@@ -44,10 +44,35 @@ namespace DriveEnum
             return DeviceID();
         }
 
+        DWORDLONG propertyAsDWORDLONG(const Property prop) const
+        {
+            Properties::const_iterator ci = m_properties.find(prop);
+
+            if (ci != m_properties.cend())
+            {
+                return ci->second.ver.fileversion;
+            }
+
+            return 0;
+        }
+
+        FILETIME propertyAsFILETIME(const Property prop) const
+        {
+            Properties::const_iterator ci = m_properties.find(prop);
+            if (ci != m_properties.cend())
+            {
+                return ci->second.ver.filetime;
+            }
+
+            return {0, 0};
+        }
+
         Properties& properties()
         {
             return m_properties;
         }
+
+        
 
         const Properties& properties() const
         {
@@ -104,6 +129,16 @@ namespace DriveEnum
     DeviceID Device::propertyAsID(const Property prop) const
     {
         return m_pImp->propertyAsID(prop);
+    }
+
+    DWORDLONG Device::propertyAsDWORDLONG(const Property prop) const
+    {
+        return m_pImp->propertyAsDWORDLONG(prop);
+    }
+
+    FILETIME Device::propertyAsFILETIME(const Property prop) const
+    {
+        return m_pImp->propertyAsFILETIME(prop);
     }
 
     typedef std::vector<Device*> DeviceArray;
@@ -223,8 +258,8 @@ namespace DriveEnum
 
                 for (auto& instance : m_properties)
                 {
-                    std::wstring value = readProperty(devInfo, data, instance);
-                    if (value.size() > 0)
+                    Value value = readProperty(devInfo, data, instance);
+                    if (value.valid())
                         device.m_pImp->properties()[instance] = value;
                 }
 

@@ -10,14 +10,14 @@ namespace DriveEnum
         virtual ~EnumCallback() {}
         virtual void Process(HDEVINFO& devInfo, SP_DEVINFO_DATA& data, DWORD index) = 0;
     protected:
-        std::wstring readProperty(HDEVINFO devinfo, SP_DEVINFO_DATA data, Property);
+        Value readProperty(HDEVINFO devinfo, SP_DEVINFO_DATA data, Property);
     private:
         std::wstring readNormalProperty(HDEVINFO devinfo, SP_DEVINFO_DATA data, Property);
-        std::wstring readInf(HDEVINFO devinfo, SP_DEVINFO_DATA data, Property);
-        std::vector<std::wstring> m_publicInfs;
-        std::vector<std::wstring> m_originalInfs;
-        std::vector<FILETIME> m_driverDates;
-        std::vector<DWORDLONG> m_driverVersions;
+        Value readInf(HDEVINFO devinfo, SP_DEVINFO_DATA data, Property);
+        std::vector<Value> m_publicInfs;
+        std::vector<Value> m_originalInfs;
+        std::vector<Value> m_driverDates;
+        std::vector<Value> m_driverVersions;
     };
 
     

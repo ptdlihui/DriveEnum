@@ -4,10 +4,10 @@
 namespace DriveEnum
 {
     bool readInfImp(HDEVINFO& hDevInfo, SP_DEVINFO_DATA& DeviceInfoData
-                  , std::vector<std::wstring>& publicInfs
-                  , std::vector<std::wstring> & originalInfs
-                  , std::vector<FILETIME>& driverDates
-                  , std::vector<DWORDLONG>& driverVersions)
+                  , std::vector<DriveEnum::Value>& publicInfs
+                  , std::vector<DriveEnum::Value> & originalInfs
+                  , std::vector<DriveEnum::Value>& driverDates
+                  , std::vector<DriveEnum::Value>& driverVersions)
     {
         SP_DRVINFO_DATA DriverInfoData;
         std::memset(&DriverInfoData, 0, sizeof(SP_DRVINFO_DATA));
@@ -71,28 +71,41 @@ namespace DriveEnum
         return false;
     }
 
-    std::wstring EnumCallback::readInf(HDEVINFO devinfo, SP_DEVINFO_DATA data, Property prop)
+    Value EnumCallback::readInf(HDEVINFO devinfo, SP_DEVINFO_DATA data, Property prop)
     {
         if (m_publicInfs.size() == 0
-            || m_originalInfs.size() == 0)
+            || m_originalInfs.size() == 0
+            || m_driverDates.size() == 0
+            || m_driverVersions.size() == 0)
         {
             m_publicInfs.clear();
             m_originalInfs.clear();
+            m_driverDates.clear();
+            m_driverVersions.clear();
 
             if (readInfImp(devinfo, data, m_publicInfs, m_originalInfs, m_driverDates, m_driverVersions) == false)
-                return std::wstring();
+                return Value();
         }
 
         unsigned int index = prop - ePropertyCount;
         unsigned int propIndex = (index - 1) / 4 ;
-        bool isOriginal = ((index - 1) % 4 == 1);
+        unsigned int type = (index - 1) % 4;
 
-        std::vector<std::wstring>& infs = isOriginal ? m_originalInfs : m_publicInfs;
+        std::vector<Value>* pInfs = nullptr;
 
-        if (propIndex < infs.size())
-            return infs[propIndex];
+        if (type == 0)
+            pInfs = &m_publicInfs;
+        else if (type == 1)
+            pInfs = &m_originalInfs;
+        else if (type == 2)
+            pInfs = &m_driverDates;
+        else if (type == 3)
+            pInfs = &m_driverVersions;
 
-        return std::wstring();
+        if (propIndex < pInfs->size())
+            return (*pInfs)[propIndex];
+
+        return Value();
 
     }
 
@@ -155,14 +168,14 @@ namespace DriveEnum
     }
 
 
-    std::wstring EnumCallback::readProperty(HDEVINFO devinfo, SP_DEVINFO_DATA data, Property prop)
+    DriveEnum::Value EnumCallback::readProperty(HDEVINFO devinfo, SP_DEVINFO_DATA data, Property prop)
     {
         if (prop > ePropertyCount)
             return readInf(devinfo, data, prop);
         else if (prop < ePropertyCount)
             return readNormalProperty(devinfo, data, prop);
 
-        return std::wstring();
+        return Value();
     }
 
 

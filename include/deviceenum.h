@@ -70,17 +70,41 @@ namespace DriveEnum
     
     struct Value
     {
+        Value()
+        {
+            ver.fileversion = 0;
+        }
+        Value(std::wstring v) : string(v)
+        {
+            if (v.size() > 0)
+                ver.fileversion = 1;
+            else
+                ver.fileversion = 0;
+        };
+        Value(FILETIME time)
+        {
+            ver.filetime = time;
+        }
+        Value(DWORDLONG v)
+        {
+            ver.fileversion = v;
+        }
+
+        bool valid() const
+        {
+            return ver.fileversion > 0;
+        }
 
         std::wstring string;
 
-        union Driver
+        union Version
         {
             FILETIME filetime;
             DWORDLONG fileversion;
-        };
+        } ver;
     };
 
-    typedef std::unordered_map<Property, std::wstring> Properties;
+    typedef std::unordered_map<Property, Value> Properties;
 
     struct DeviceID
     {
@@ -101,6 +125,8 @@ namespace DriveEnum
         std::wstring propertyAsWString(const Property) const;
         GUID propertyAsGUID(const Property) const;
         DeviceID propertyAsID(const Property) const;
+        DWORDLONG propertyAsDWORDLONG(const Property) const;
+        FILETIME propertyAsFILETIME(const Property) const;
     protected:
         friend class DeviceManagerImp;
         DeviceImp* m_pImp;

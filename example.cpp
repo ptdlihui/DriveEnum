@@ -9,6 +9,8 @@ int main(int argc, char *argv[])
     devMgr.AddProperty(DriveEnum::eDescription);
     devMgr.AddProperty(DriveEnum::ePublicInf0);
     devMgr.AddProperty(DriveEnum::eOriginalInf0);
+    devMgr.AddProperty(DriveEnum::eDriverDate0);
+    devMgr.AddProperty(DriveEnum::eDriverVersion0);
 
     devMgr.StartUp();
 
