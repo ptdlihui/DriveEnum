@@ -1,6 +1,6 @@
 #pragma once
 #include "deviceenum.h"
-
+#include <vector>
 namespace DriveEnum
 {
 

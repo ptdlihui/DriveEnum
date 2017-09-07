@@ -1,9 +1,12 @@
 #include "deviceenum.h"
 #include "service.h"
 #include <set>
+#include <unordered_map>
 
 namespace DriveEnum
 {
+    typedef std::unordered_map<Property, Value> Properties;
+
     class DeviceImp
     {
     public:

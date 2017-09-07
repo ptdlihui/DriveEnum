@@ -4,7 +4,8 @@
 #include <setupapi.h>
 #include <string>
 #include <SetupAPI.h>
-#include <unordered_map>
+#include <tuple>
+
 
 typedef LONG_PTR DriverHandle;
 
@@ -104,7 +105,7 @@ namespace DriveEnum
         } ver;
     };
 
-    typedef std::unordered_map<Property, Value> Properties;
+
 
     struct DeviceID
     {
@@ -131,6 +132,31 @@ namespace DriveEnum
         friend class DeviceManagerImp;
         DeviceImp* m_pImp;
     };
+    
+    struct Driver
+    {
+        std::wstring PublishedInf; // ePublicInf0
+        std::wstring OriginalInf; // eOriginalInf0
+        std::wstring Provider; // eMFG
+        std::wstring ClassName; //eEnumeratorName
+        GUID ClassGUID; // eClassGUID
+        FILETIME DriverTime; // eDriverDate0
+        DWORDLONG DriverVersion; // eDriverVersion0
+
+        bool operator == (const Driver& right) const
+        {
+            return (PublishedInf.compare(right.PublishedInf) == 0
+                && OriginalInf.compare(right.OriginalInf) == 0
+                && Provider.compare(right.Provider) == 0
+                && ClassName.compare(right.ClassName) == 0
+                && ClassGUID == right.ClassGUID
+                && DriverTime.dwHighDateTime == right.DriverTime.dwHighDateTime
+                && DriverTime.dwLowDateTime == right.DriverTime.dwLowDateTime
+                && DriverVersion == right.DriverVersion);
+        }
+    };
+
+    
 
     class DeviceManagerImp;
     class DeviceManager
