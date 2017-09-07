@@ -8,6 +8,12 @@
 
 typedef LONG_PTR DriverHandle;
 
+#define DeclearExtraEnum(CUR, PRE, STEP) \
+ePublicInf##CUR = ePublicInf##PRE + STEP, \
+eOriginalInf##CUR = eOriginalInf##PRE + STEP, \
+eDriverDate##CUR = eDriverDate##PRE + STEP, \
+eDriverVersion##CUR = eDriverVersion##PRE + STEP,
+
 namespace DriveEnum
 {
     enum Property : unsigned int
@@ -46,14 +52,12 @@ namespace DriveEnum
         ePropertyCount = SPDRP_MAXIMUM_PROPERTY,
         ePublicInf0 = SPDRP_MAXIMUM_PROPERTY + 1,
         eOriginalInf0 = SPDRP_MAXIMUM_PROPERTY + 2,
-        ePublicInf1 = SPDRP_MAXIMUM_PROPERTY + 3,
-        eOriginalInf1 = SPDRP_MAXIMUM_PROPERTY + 4,
-        ePublicInf2 = SPDRP_MAXIMUM_PROPERTY + 5,
-        eOriginalInf2 = SPDRP_MAXIMUM_PROPERTY + 6,
-        ePublicInf3 = SPDRP_MAXIMUM_PROPERTY + 7,
-        eOriginalInf3 = SPDRP_MAXIMUM_PROPERTY + 8,
-        ePublicInf4 = SPDRP_MAXIMUM_PROPERTY + 9,
-        eOriginalInf4 = SPDRP_MAXIMUM_PROPERTY + 10
+        eDriverDate0 = SPDRP_MAXIMUM_PROPERTY + 3,
+        eDriverVersion0 = SPDRP_MAXIMUM_PROPERTY + 4,
+        DeclearExtraEnum(1, 0, 4) 
+        DeclearExtraEnum(2, 1, 4)
+        DeclearExtraEnum(3, 2, 4)
+        DeclearExtraEnum(4, 3, 4)
     };
 
     enum EnumStyle
@@ -61,6 +65,19 @@ namespace DriveEnum
         eAll = 0,
         eCurrent = 1,
         eUnknownStyle = 2
+    };
+
+    
+    struct Value
+    {
+
+        std::wstring string;
+
+        union Driver
+        {
+            FILETIME filetime;
+            DWORDLONG fileversion;
+        };
     };
 
     typedef std::unordered_map<Property, std::wstring> Properties;
@@ -77,7 +94,7 @@ namespace DriveEnum
     public:
         Device();
         Device(const Device&);
-        ~Device();
+        virtual ~Device();
 
         const Device& operator = (const Device&);
 
@@ -89,10 +106,19 @@ namespace DriveEnum
         DeviceImp* m_pImp;
     };
 
-    class DeviceClassImp;
+    class DeviceManagerImp;
     class DeviceManager
     {
-        DeviceClassImp* m_pImp;
+    public:
+        DeviceManager(EnumStyle);
+        ~DeviceManager();
+        bool StartUp();
+        unsigned int Count();
+        const Device* GetDevice(unsigned int index) const;
+        Device* GetDevice(unsigned int index);
+        void AddProperty(Property);
+    protected:
+        DeviceManagerImp* m_pImp;
     };
 };
 

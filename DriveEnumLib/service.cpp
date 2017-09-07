@@ -3,7 +3,11 @@
 
 namespace DriveEnum
 {
-    bool readInfImp(HDEVINFO& hDevInfo, SP_DEVINFO_DATA& DeviceInfoData, std::vector<std::wstring>& publicInfs, std::vector<std::wstring> & originalInfs)
+    bool readInfImp(HDEVINFO& hDevInfo, SP_DEVINFO_DATA& DeviceInfoData
+                  , std::vector<std::wstring>& publicInfs
+                  , std::vector<std::wstring> & originalInfs
+                  , std::vector<FILETIME>& driverDates
+                  , std::vector<DWORDLONG>& driverVersions)
     {
         SP_DRVINFO_DATA DriverInfoData;
         std::memset(&DriverInfoData, 0, sizeof(SP_DRVINFO_DATA));
@@ -33,6 +37,9 @@ namespace DriveEnum
                 data.resize(sizeof(SP_DRVINFO_DETAIL_DATA));
                 std::memset(data.data(), 0, data.size());
                 reinterpret_cast<PSP_DRVINFO_DETAIL_DATA>(data.data())->cbSize = sizeof(SP_DRVINFO_DETAIL_DATA);
+
+                driverDates.push_back(DriverInfoData.DriverDate);
+                driverVersions.push_back(DriverInfoData.DriverVersion);
 
                 while (!SetupDiGetDriverInfoDetail(hDevInfo, &DeviceInfoData, &DriverInfoData, reinterpret_cast<PSP_DRVINFO_DETAIL_DATA>(data.data()), data.size(), &realSize))
                 {
@@ -72,13 +79,13 @@ namespace DriveEnum
             m_publicInfs.clear();
             m_originalInfs.clear();
 
-            if (readInfImp(devinfo, data, m_publicInfs, m_originalInfs) == false)
+            if (readInfImp(devinfo, data, m_publicInfs, m_originalInfs, m_driverDates, m_driverVersions) == false)
                 return std::wstring();
         }
 
         unsigned int index = prop - ePropertyCount;
-        unsigned int propIndex = (index - 1) / 2 ;
-        bool isOriginal = ((index - 1) % 2 == 1);
+        unsigned int propIndex = (index - 1) / 4 ;
+        bool isOriginal = ((index - 1) % 4 == 1);
 
         std::vector<std::wstring>& infs = isOriginal ? m_originalInfs : m_publicInfs;
 
@@ -148,5 +155,48 @@ namespace DriveEnum
     }
 
 
+    std::wstring EnumCallback::readProperty(HDEVINFO devinfo, SP_DEVINFO_DATA data, Property prop)
+    {
+        if (prop > ePropertyCount)
+            return readInf(devinfo, data, prop);
+        else if (prop < ePropertyCount)
+            return readNormalProperty(devinfo, data, prop);
+
+        return std::wstring();
+    }
+
+
+    bool EnumService::EnumBody(EnumCallback* pCallback)
+    {
+        DWORD flag = (m_style == eCurrent) ? DIGCF_PRESENT | DIGCF_ALLCLASSES : DIGCF_ALLCLASSES;
+
+        HDEVINFO hDevInfo;
+        SP_DEVINFO_DATA DeviceInfoData;
+        DWORD i;
+
+        hDevInfo = SetupDiGetClassDevs(
+            NULL,
+            0, // Enumerator
+            0,
+            flag);
+
+        if (INVALID_HANDLE_VALUE == hDevInfo)
+        {
+            // Insert error handling here.
+            return false;
+        }
+
+        std::memset(&DeviceInfoData, 0, sizeof(DeviceInfoData));
+        DeviceInfoData.cbSize = sizeof(DeviceInfoData);
+
+        for (i = 0; SetupDiEnumDeviceInfo(hDevInfo, i, &DeviceInfoData); i++)
+        {
+            if (pCallback)
+                pCallback->Process(hDevInfo, DeviceInfoData, i);
+        }
+
+        SetupDiDestroyDeviceInfoList(hDevInfo);
+        return true;
+    }
     
 }

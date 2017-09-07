@@ -7,6 +7,7 @@ namespace DriveEnum
     class EnumCallback
     {
     public:
+        virtual ~EnumCallback() {}
         virtual void Process(HDEVINFO& devInfo, SP_DEVINFO_DATA& data, DWORD index) = 0;
     protected:
         std::wstring readProperty(HDEVINFO devinfo, SP_DEVINFO_DATA data, Property);
@@ -15,6 +16,8 @@ namespace DriveEnum
         std::wstring readInf(HDEVINFO devinfo, SP_DEVINFO_DATA data, Property);
         std::vector<std::wstring> m_publicInfs;
         std::vector<std::wstring> m_originalInfs;
+        std::vector<FILETIME> m_driverDates;
+        std::vector<DWORDLONG> m_driverVersions;
     };
 
     
@@ -22,7 +25,7 @@ namespace DriveEnum
     {
     public:
         EnumService(EnumStyle style) : m_style(style) {}
-        void EnumBody(EnumCallback* );
+        bool EnumBody(EnumCallback* );
     protected:
         EnumStyle m_style;
     };
