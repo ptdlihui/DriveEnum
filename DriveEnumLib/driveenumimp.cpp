@@ -75,7 +75,10 @@ namespace DriveEnum
             return m_properties;
         }
 
-        
+        bool hasProperty(Property prop) const
+        {
+            return m_properties.find(prop) != m_properties.end();
+        }
 
         const Properties& properties() const
         {
@@ -85,6 +88,11 @@ namespace DriveEnum
         void copyFrom(const DeviceImp& right)
         {
             m_properties = right.m_properties;
+        }
+
+        void clear()
+        {
+            m_properties.clear();
         }
     protected:
         Properties m_properties;
@@ -115,6 +123,7 @@ namespace DriveEnum
         if (this == &right)
             return *this;
 
+        m_pImp->clear();
         m_pImp->copyFrom(*right.m_pImp);
         return *this;
     }
@@ -158,14 +167,20 @@ namespace DriveEnum
             clear();
         }
 
-        bool startup()
+        bool process(DevMgrProcessProgress* pProgress, bool reset = true)
         {
             if (m_devices.size() == 0)
                 return false;
             if (m_properties.size() == 0)
                 return false;
 
-            EnumGetProperty callback(m_devices, m_properties);
+            if (reset)
+            {
+                for (auto& instance : m_devices)
+                    instance->m_pImp->clear();
+            }
+
+            EnumGetProperty callback(m_devices, m_properties, pProgress);
 
             EnumService service(m_style);
 
@@ -177,6 +192,12 @@ namespace DriveEnum
         void addProperty(Property prop)
         {
             m_properties.insert(prop);
+        }
+
+        void addProperties(std::vector<Property>& properties)
+        {
+            for (auto& instance : properties)
+                m_properties.insert(instance);
         }
 
         unsigned int count() const
@@ -247,9 +268,10 @@ namespace DriveEnum
         class EnumGetProperty : public EnumCallback
         {
         public:
-            EnumGetProperty(DeviceArray& devices, std::set<Property>& properties)
+            EnumGetProperty(DeviceArray& devices, std::set<Property>& properties, DevMgrProcessProgress* pProgress)
                 : m_devices(devices)
                 , m_properties(properties)
+                , m_pProgress(pProgress)
             {}
 
             virtual void Process(HDEVINFO& devInfo, SP_DEVINFO_DATA& data, DWORD index) override
@@ -257,20 +279,30 @@ namespace DriveEnum
                 if (index >= m_devices.size())
                     return;
 
+                if (m_pProgress)
+                    m_pProgress->BeforeProcess(index, m_devices.size());
+
                 Device device;
 
                 for (auto& instance : m_properties)
                 {
-                    Value value = readProperty(devInfo, data, instance);
-                    if (value.valid())
-                        device.m_pImp->properties()[instance] = value;
+                    if (!device.m_pImp->hasProperty(instance))
+                    {
+                        Value value = readProperty(devInfo, data, instance);
+                        if (value.valid())
+                            device.m_pImp->properties()[instance] = value;
+                    }
                 }
 
                 *m_devices[index] = device;
+
+                if (m_pProgress)
+                    m_pProgress->AfterProcess(m_devices[index], index, m_devices.size());
             }
         protected:
             DeviceArray& m_devices;
             std::set<Property>& m_properties;
+            DevMgrProcessProgress* m_pProgress;
         };
 
     protected:
@@ -293,9 +325,9 @@ namespace DriveEnum
         }
     }
 
-    bool DeviceManager::StartUp()
+    bool DeviceManager::Process(DevMgrProcessProgress* pProgress, bool reset)
     {
-        return m_pImp->startup();
+        return m_pImp->process(pProgress, reset);
     }
 
     unsigned int DeviceManager::Count()
@@ -316,5 +348,10 @@ namespace DriveEnum
     void DeviceManager::AddProperty(Property prop)
     {
         return m_pImp->addProperty(prop);
+    }
+
+    void DeviceManager::AddProperties(std::vector<Property>& props)
+    {
+        return m_pImp->addProperties(props);
     }
 }

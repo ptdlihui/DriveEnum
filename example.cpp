@@ -1,5 +1,16 @@
 #include "deviceenum.h"
 #include "deviceutil.h"
+#include <iostream>
+
+class Progress : public DriveEnum::DevMgrProcessProgress
+{
+public:
+    void BeforeProcess(unsigned int i, unsigned int tota) override {};
+    void AfterProcess(DriveEnum::Device* pDevice, unsigned int i, unsigned int total) override
+    {
+        std::cout << i / (float)(total) * 100 << "% completes" << std::endl;
+    }
+};
 
 int main(int argc, char *argv[])
 {
@@ -13,8 +24,10 @@ int main(int argc, char *argv[])
     devMgr.AddProperty(DriveEnum::eDriverDate0);
     devMgr.AddProperty(DriveEnum::eDriverVersion0);
     devMgr.AddProperty(DriveEnum::eMFG);
+    devMgr.AddProperty(DriveEnum::eHardwareID);
 
-    devMgr.StartUp();
+    Progress prog;
+    devMgr.Process(&prog);
 
     std::vector<DriveEnum::Property> slots;
     slots.push_back(DriveEnum::eClassGUID);
@@ -25,6 +38,12 @@ int main(int argc, char *argv[])
 
     DriveEnum::DeviceSort<GUID, std::wstring, std::wstring, std::wstring, std::wstring> sort(devMgr, slots);
     sort.sorting();
+
+    slots.clear();
+    slots.push_back(DriveEnum::eEnumeratorName);
+    DriveEnum::DeviceSort<std::wstring> devType(devMgr, slots);
+    devType.sorting();
+
 
     return 0;
 }

@@ -4,7 +4,7 @@
 #include <setupapi.h>
 #include <string>
 #include <SetupAPI.h>
-#include <tuple>
+#include <vector>
 
 
 typedef LONG_PTR DriverHandle;
@@ -131,32 +131,16 @@ namespace DriveEnum
     protected:
         friend class DeviceManagerImp;
         DeviceImp* m_pImp;
-    };
-    
-    struct Driver
+    }; 
+
+    class DevMgrProcessProgress
     {
-        std::wstring PublishedInf; // ePublicInf0
-        std::wstring OriginalInf; // eOriginalInf0
-        std::wstring Provider; // eMFG
-        std::wstring ClassName; //eEnumeratorName
-        GUID ClassGUID; // eClassGUID
-        FILETIME DriverTime; // eDriverDate0
-        DWORDLONG DriverVersion; // eDriverVersion0
+    public:
+        virtual ~DevMgrProcessProgress() {};
 
-        bool operator == (const Driver& right) const
-        {
-            return (PublishedInf.compare(right.PublishedInf) == 0
-                && OriginalInf.compare(right.OriginalInf) == 0
-                && Provider.compare(right.Provider) == 0
-                && ClassName.compare(right.ClassName) == 0
-                && ClassGUID == right.ClassGUID
-                && DriverTime.dwHighDateTime == right.DriverTime.dwHighDateTime
-                && DriverTime.dwLowDateTime == right.DriverTime.dwLowDateTime
-                && DriverVersion == right.DriverVersion);
-        }
+        virtual void BeforeProcess(unsigned int i, unsigned int total) = 0;
+        virtual void AfterProcess(Device* pDevice, unsigned int i, unsigned int total) = 0;
     };
-
-    
 
     class DeviceManagerImp;
     class DeviceManager
@@ -164,11 +148,12 @@ namespace DriveEnum
     public:
         DeviceManager(EnumStyle);
         ~DeviceManager();
-        bool StartUp();
+        bool Process(DevMgrProcessProgress* pProgress, bool reset = true);
         unsigned int Count();
         const Device* GetDevice(unsigned int index) const;
         Device* GetDevice(unsigned int index);
         void AddProperty(Property);
+        void AddProperties(std::vector<Property>&);
     protected:
         DeviceManagerImp* m_pImp;
     };

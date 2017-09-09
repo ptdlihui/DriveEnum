@@ -2,7 +2,6 @@
 
 #include "deviceenum.h"
 #include <tuple>
-#include <vector>
 #include <unordered_set>
 #include <set>
 #include <string>
