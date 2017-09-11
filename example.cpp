@@ -25,9 +25,25 @@ int main(int argc, char *argv[])
     devMgr.AddProperty(DriveEnum::eDriverVersion0);
     devMgr.AddProperty(DriveEnum::eMFG);
     devMgr.AddProperty(DriveEnum::eHardwareID);
+    devMgr.AddProperty(DriveEnum::eLocationInformation);
+    devMgr.AddProperty(DriveEnum::eLocationPaths);
 
     Progress prog;
     devMgr.Process(&prog);
+
+    unsigned int devCount = devMgr.Count();
+
+    for (unsigned int i = 0; i < devCount; i++)
+    {
+        DriveEnum::Device device = *devMgr.GetDevice(i);
+
+        std::wcout << "---------------------------------------------------------------------" << std::endl;
+        std::wcout << "Description:" << device.propertyAsWString(DriveEnum::eDescription) << std::endl;
+        std::wcout << "Name:" << device.propertyAsWString(DriveEnum::eEnumeratorName) << std::endl;
+        std::wcout << "Provider:" << device.propertyAsWString(DriveEnum::eMFG) << std::endl;
+        std::wcout << "ClassGUID:" << device.propertyAsWString(DriveEnum::eClassGUID) << std::endl;
+        std::wcout << "Path:" << device.propertyAsWString(DriveEnum::eLocationPaths) << std::endl;
+     }
 
     std::vector<DriveEnum::Property> slots;
     slots.push_back(DriveEnum::eClassGUID);
