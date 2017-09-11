@@ -329,7 +329,7 @@ namespace DriveEnum
         return m_pImp->process(pProgress, reset);
     }
 
-    unsigned int DeviceManager::Count()
+    unsigned int DeviceManager::Count() const
     {
         return m_pImp->count();
     }

@@ -165,7 +165,7 @@ namespace DriveEnum
         DeviceManager(EnumStyle);
         ~DeviceManager();
         bool Process(DevMgrProcessProgress* pProgress, bool reset = true);
-        unsigned int Count();
+        unsigned int Count() const;
         const Device* GetDevice(unsigned int index) const;
         Device* GetDevice(unsigned int index);
         void AddProperty(Property);
