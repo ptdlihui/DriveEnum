@@ -96,6 +96,22 @@ namespace DriveEnum
             return ver.fileversion > 0;
         }
 
+        std::wstring String() const
+        {
+            return string;
+        }
+
+        FILETIME FileTime() const
+        {
+            return ver.filetime;
+        }
+
+        DWORDLONG FileVersion() const
+        {
+            return ver.fileversion;
+        }
+
+    protected:
         std::wstring string;
 
         union Version

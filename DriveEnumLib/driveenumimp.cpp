@@ -21,7 +21,7 @@ namespace DriveEnum
         {
             Properties::const_iterator ci = m_properties.find(prop);
             if (ci != m_properties.cend())
-                return ci->second.string;
+                return ci->second.String();
 
             return std::wstring();
         }
@@ -32,7 +32,7 @@ namespace DriveEnum
             Properties::const_iterator ci = m_properties.find(prop);
             if (ci != m_properties.cend())
             {
-                std::wstring guidStr = ci->second.string;
+                std::wstring guidStr = ci->second.String();
                 GUID ret;
                 HRESULT hr = CLSIDFromString(guidStr.data(), &ret);
                 if (hr == S_OK)
@@ -53,9 +53,8 @@ namespace DriveEnum
 
             if (ci != m_properties.cend())
             {
-                return ci->second.ver.fileversion;
+                return ci->second.FileVersion();
             }
-
             return 0;
         }
 
@@ -64,7 +63,7 @@ namespace DriveEnum
             Properties::const_iterator ci = m_properties.find(prop);
             if (ci != m_properties.cend())
             {
-                return ci->second.ver.filetime;
+                return ci->second.FileTime();
             }
 
             return {0, 0};
